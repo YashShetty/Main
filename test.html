@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-18">
+        <!--<script type="text/javascript" src="musicprop.json"></script>
+<script src="export.js"></script>-->
+        <script src="export.js"></script>
+        <style>
+            body {
+                font-family: 'Arial';
+                box-sizing: border-box;
+            }
+
+            .box {
+                display: block;
+                border: 2px solid black;
+                margin-top: 5%;
+                padding: 1% 1% 5% 1%;
+                width: 90%;
+            }
+
+            .box p {
+                display: none;
+                overflow-wrap: break-word;
+                letter-spacing: 0.5px;
+            }
+
+            input {
+                width: 90%;
+            }
+
+            a {
+                text-decoration: none;
+            }
+
+            .button {
+                font-size: 1.5em;
+                color: red;
+                cursor: pointer;
+            }
+
+            .container {
+                padding: 0% 10%;
+            }
+
+            #in5 {
+                width: 60%;
+            }
+
+            .edit {
+                display: inline-block;
+                cursor: text;
+                width: 90%;
+            }
+
+            .edit:focus {
+                outline: none;
+            }
+        </style>
+        <!--<py-script src="bin.py" id="snake"></py-script>-->
+    </head>
+    <body>
+        <div class="container">
+            <p>
+                <strong>Note:</strong>
+                The atob() and btoa() methods are not supported in IE9 and earlier. 
+            </p>
+            <div class="box">
+                <h2>Decode</h2>
+                <input type="text" id="in1" value="iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="/>
+                <b onclick="toggleVis(this)" class="button box-button">+</b>
+                <p id="out1"></p>
+            </div>
+            <div class="box">
+                <h2>Encode</h2>
+                <input type="text" id="in2">
+                <b onclick="toggleVis(this)" class="button box-button">+</b>
+                <p id="out2"></p>
+            </div>
+            <div class="box" id="modify">
+                <h2>Modify</h2>
+                <input type="text" id="in3" value="66,77,70,0,0,0,0,0,0,0,54,0,0,0,40,0,0,0,2,0,0,0,2,0,0,0,1,0,24,0,0,0,0,0,16,0,0,0,19,11,0,0,19,11,0,0,0,0,0,0,0,0,0,0,0,0,255,255,255,255,0,0,255,0,0,0,255,0,0,0">
+                <b onclick="toggleVis(this)" class="button box-button">+</b>
+                <p id="out3"></p>
+            </div>
+            <div class="box" id="byte-view">
+                <h2>Bytes</h2>
+                <input type="text" id="in4">
+                <b onclick="toggleVis(this)" class="button box-button">+</b>
+                <div id="out4" style="display:none; margin-top:1%;">
+                    <div id="edit-container"></div>
+                    <a href="#modify">
+                        <b class="button">*</b>
+                    </a>
+                </div>
+            </div>
+            <div class="box">
+                <h2>Convert</h2>
+                <input type="text" id="in5">
+                <b onclick="radix=10" class="button checked">D</b>
+                <b onclick="radix=16" class="button">H</b>
+                <b onclick="toggleVis(this)" class="button box-button">+</b>
+                <p id="out5"></p>
+            </div>
+        </div>
+        <object id="imports"></object>
+        <img src="bin_file.png">
+        <script>
+            function decodeBase64ToArrayBuffer(base64String) {
+                var len = (base64String.length / 4) * 3;
+                var str = atob(base64String);
+                var arrayBuffer = new ArrayBuffer(len);
+                var bytes = new Uint8Array(arrayBuffer);
+
+                for (var i = 0; i < len; i++) {
+                    bytes[i] = str.charCodeAt(i);
+                }
+                return bytes.buffer;
+            }
+            function byteString(n) {
+                if (n < 0 || n > 255 || n % 1 !== 0) {
+                    throw new Error(n + " does not fit in a byte");
+                }
+                return ("000000000" + n.toString(2)).substr(-8)
+            }
+            let radix = 10;
+            document.getElementById("in1").addEventListener("keypress", func1);
+            document.getElementById("in2").addEventListener("keypress", func2)
+            document.getElementById("in3").addEventListener("keypress", func3);
+            document.getElementById("in4").addEventListener("keypress", func4);
+            document.getElementById("in5").addEventListener("keypress", func5);
+
+            function func1(e) {
+                if (e.keyCode == 13) {
+                    try {
+                        atob(document.getElementById("in1").value);
+                    } catch (err) {
+                        document.getElementById("out1").innerHTML = "Error: unable to decode " + document.getElementById("in1").value;
+                        return;
+                    }
+                }
+                var str = document.getElementById("in1").value;
+                var dec = window.atob(str);
+                var decode = "";
+                for (x = 0; x < dec.length; x++) {
+                    decode += "&#" + dec.charCodeAt(x) + ";";
+                }
+                var buffer = decodeBase64ToArrayBuffer(str);
+                console.log(buffer);
+                var oldbytes = new Uint8Array(buffer);
+                var bytes = "";
+                for (var j = 0; j < oldbytes.length; j++) {
+                    bytes += byteString(oldbytes[j]);
+                }
+                var decodeb = "";
+                for (let y = 0; y < oldbytes.length; y++) {
+                    decodeb += String.fromCharCode(oldbytes[y]);
+                }
+                var res = "Encoded String: " + str + "<br>" + "A-Decoded String: <span id='A'>" + dec + "</span><br>" + "B-Decoded String: <span id='B'>" + decode + "</span><br>" + "Bytes: " + oldbytes;
+                document.getElementById("out1").innerHTML = res;
+                if (document.getElementById("out1").style.display == 'none' || document.getElementById('out1').style.display == '') {
+                    toggleVis(document.getElementsByClassName('box-button')[0]);
+                }
+                console.log(dec.length + ',' + decode.length);
+            }
+
+            function func2(e) {
+                if (e.keyCode == 13) {
+                    let dec = document.getElementById('in2').value;
+                    let enc = btoa(dec);
+                    let buffer = decodeBase64ToArrayBuffer(enc);
+                    let view = new Uint8Array(buffer);
+                    let res = "Decoded: " + dec + "<br>" + "Encoded: " + enc + "<br>" + "Bytes: " + view;
+                    document.getElementById("out2").innerHTML = res;
+                    if (document.getElementById("out2").style.display == 'none' || document.getElementById('out2').style.display == '') {
+                        toggleVis(document.getElementsByClassName('box-button')[1]);
+                    }
+                }
+            }
+
+            function func3(e) {
+                if (e.keyCode == 13) {
+                    let modify = document.getElementById("in3").value;
+                    modify = modify.split(',');
+                    let str = "";
+                    let res;
+                    for (i = 0; i < modify.length; i++) {
+                        if (isNaN(modify[i]) || modify[i] % 1 !== 0 || modify[i] < 0 || modify[i] > 255) {
+                            let err = isNaN(Number(modify[i])) || modify[i] % 1 !== 0 ? "input contains elements that are not integers" : modify[i] < 0 || modify[i] > 255 ? "input contains elements outside range" : "Unknown";
+                            res = "Error: " + err + " at byte " + i + "<br>" + modify[i];
+                            break;
+                        }
+                        str += String.fromCharCode(modify[i]);
+                    }
+                    var enc = btoa(str);
+                    if (res == undefined)
+                        var click = 'bytesView([' + modify + '])';
+                    res = "Bytes: " + modify + "&nbsp;<a href='#byte-view'><b onclick=" + click + " class='button'>*</b></a><br>" + "Length: " + modify.length + "<br>" + "Decoded String: " + str + "<br>" + "Encoded String: " + enc;
+                    document.getElementById('out3').innerHTML = res;
+                    if (document.getElementById("out3").style.display == 'none' || document.getElementById('out3').style.display == '') {
+                        toggleVis(document.getElementsByClassName('box-button')[2]);
+                    }
+                }
+            }
+
+            function func4(e) {
+                if (e.keyCode == 13) {
+                    let bytes = document.getElementById('in4').value;
+                    bytes = bytes.split(',');
+                    bytesView(bytes);
+                }
+            }
+
+            function func5(e) {
+                if (e.keyCode == 13) {
+                    let n = document.getElementById("in5").value;
+                    n.split(',');
+                    let out = '';
+                    for (i = 0; i < n.length; i++) {
+                        out += parseInt(n[i], radix);
+                        if (i < n.length - 1)
+                            out += ','
+                    }
+                }
+            }
+
+            function toggleVis(e) {
+                if (e.nextElementSibling.innerHTML.length !== 0) {
+                    e.nextElementSibling.style.display = e.nextElementSibling.style.display == 'none' || e.nextElementSibling.style.display == '' ? 'block' : 'none';
+                    e.innerHTML = e.innerHTML == '+' ? '-' : '+';
+                }
+            }
+
+            function bytesView(bytes) {
+                let res = '', space, str = '';
+                for (i = 0; i < bytes.length; i++) {
+                    if (isNaN(bytes[i]) || bytes[i] % 1 !== 0 || bytes[i] < 0 || bytes[i] > 255) {
+                        let err = isNaN(Number(bytes[i])) || bytes[i] % 1 !== 0 ? "input contains elements that are not integers" : bytes[i] < 0 || bytes[i] > 255 ? "input contains elements outside range" : "Unknown";
+                        res += "<br>Error: " + err + " at byte " + i + "<br>" + bytes[i];
+                    }
+                    space = i.toString().length == 1 ? "&nbsp;&nbsp;" : "";
+                    str += space + i + ": <div class='edit' tabindex='0' contenteditable='true' onfocus='edit(this)'>" + bytes[i] + "</div><br>";
+                }
+                res = str + res;
+                document.getElementById("out4").children[0].innerHTML = res;
+                if (document.getElementById("out4").style.display == 'none' || document.getElementById('out4').style.display == '') {
+                    toggleVis(document.getElementsByClassName('box-button')[3]);
+                }
+
+                document.getElementById("out4").querySelector('.button').addEventListener('click', function(e) {
+                    let inputx = '';
+                    let outid = document.getElementById('out4').children[0];
+                    for (var k = 0; k < outid.children.length - 1; k++) {
+                        if (outid.children[k].innerHTML) {
+                            inputx += outid.children[k].innerHTML + (k == outid.children.length - 3 ? '' : ',');
+                        }
+                    }
+                    document.getElementById('in3').value = inputx;
+                    func3(e);
+                });
+            }
+
+            let editing = {
+                element: null,
+                listener: null,
+                number: 0
+            };
+
+            function edit(element) {
+                if (editing.element) {
+                    editing.element.removeEventListener('keydown', editing.listener);
+                }
+                editing.element = element;
+                editing.number = parseInt(editing.element.previousSibling.textContent.split(':')[0]);
+                editing.listener = function(e) {
+                    var accepted = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', "ArrowLeft", "ArrowRight"]
+                    if ((editing.element.innerHTML.length == 3 && !isNaN(e.key)) || !accepted.includes(e.key)) {
+                        if (e.key !== "Backspace")
+                            e.preventDefault()
+                        switch (e.key) {
+                        case "Enter":
+                            var editlist = editing.element.parentElement.querySelectorAll('.edit');
+
+                            for (let l = editing.number + 1, n; l < editlist.length; l++) {
+                            }
+                            editing.element.parentElement.innerHTML += (editing.element.parentElement.querySelectorAll('.edit').length.toString().length == 1 ? "&nbsp;&nbsp;" : "") + editing.element.parentElement.querySelectorAll('.edit').length + ": <div class='edit' tabindex='0' contenteditable='true' onfocus='edit(this)'></div><br>";
+                            document.querySelectorAll('.edit')[document.querySelectorAll('.edit').length - 1].focus()
+                            break;
+                        case "Backspace":
+                            if (editing.element.innerHTML.length == 0) {
+                                editing.element.parentElement.removeChild(editing.element.parentElement.lastElementChild);
+                                document.querySelector('.edit').parentElement.removeChild(document.querySelector('.edit').parentElement.lastElementChild);
+                                document.querySelector('.edit').parentElement.removeChild(document.querySelector('.edit').parentElement.lastChild);
+                                document.querySelectorAll('.edit')[document.querySelectorAll('.edit').length - 1].focus();
+                            }
+                            break;
+                        }
+                    }
+                }
+                editing.element.addEventListener('keydown', editing.listener)
+            }
+            //console.log(atob(data["Message"]))
+
+            function retrieveData(src) {
+                var importElement = document.querySelector("#imports");
+                importElement.type = "text/html";
+                importElement.data = src;
+                var retval = "HMM";
+
+                /*return new Promise(function(resolve, reject) {
+				setTimeout(function() {
+					var resolter = importElement.contentDocument || importElement.contentWindow.document;
+					resolve(resolter);
+				}, 300);
+			});*/
+            }
+
+            retrieveData("music.html");
+            var file = new File(['bin_file'], 'bin_file.png', {type:'image/png'});
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+                console.log(e.target.result);
+            };
+            reader.readAsText(file);
+        </script>
+    </body>
+</html>

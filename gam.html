@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>New Tab</title>
+        <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACWCAYAAABkW7XSAAAEYklEQVR4Xu3UAQkAAAwCwdm/9HI83BLIOdw5AgQIRAQWySkmAQIEzmB5AgIEMgIGK1OVoAQIGCw/QIBARsBgZaoSlAABg+UHCBDICBisTFWCEiBgsPwAAQIZAYOVqUpQAgQMlh8gQCAjYLAyVQlKgIDB8gMECGQEDFamKkEJEDBYfoAAgYyAwcpUJSgBAgbLDxAgkBEwWJmqBCVAwGD5AQIEMgIGK1OVoAQIGCw/QIBARsBgZaoSlAABg+UHCBDICBisTFWCEiBgsPwAAQIZAYOVqUpQAgQMlh8gQCAjYLAyVQlKgIDB8gMECGQEDFamKkEJEDBYfoAAgYyAwcpUJSgBAgbLDxAgkBEwWJmqBCVAwGD5AQIEMgIGK1OVoAQIGCw/QIBARsBgZaoSlAABg+UHCBDICBisTFWCEiBgsPwAAQIZAYOVqUpQAgQMlh8gQCAjYLAyVQlKgIDB8gMECGQEDFamKkEJEDBYfoAAgYyAwcpUJSgBAgbLDxAgkBEwWJmqBCVAwGD5AQIEMgIGK1OVoAQIGCw/QIBARsBgZaoSlAABg+UHCBDICBisTFWCEiBgsPwAAQIZAYOVqUpQAgQMlh8gQCAjYLAyVQlKgIDB8gMECGQEDFamKkEJEDBYfoAAgYyAwcpUJSgBAgbLDxAgkBEwWJmqBCVAwGD5AQIEMgIGK1OVoAQIGCw/QIBARsBgZaoSlAABg+UHCBDICBisTFWCEiBgsPwAAQIZAYOVqUpQAgQMlh8gQCAjYLAyVQlKgIDB8gMECGQEDFamKkEJEDBYfoAAgYyAwcpUJSgBAgbLDxAgkBEwWJmqBCVAwGD5AQIEMgIGK1OVoAQIGCw/QIBARsBgZaoSlAABg+UHCBDICBisTFWCEiBgsPwAAQIZAYOVqUpQAgQMlh8gQCAjYLAyVQlKgIDB8gMECGQEDFamKkEJEDBYfoAAgYyAwcpUJSgBAgbLDxAgkBEwWJmqBCVAwGD5AQIEMgIGK1OVoAQIGCw/QIBARsBgZaoSlAABg+UHCBDICBisTFWCEiBgsPwAAQIZAYOVqUpQAgQMlh8gQCAjYLAyVQlKgIDB8gMECGQEDFamKkEJEDBYfoAAgYyAwcpUJSgBAgbLDxAgkBEwWJmqBCVAwGD5AQIEMgIGK1OVoAQIGCw/QIBARsBgZaoSlAABg+UHCBDICBisTFWCEiBgsPwAAQIZAYOVqUpQAgQMlh8gQCAjYLAyVQlKgIDB8gMECGQEDFamKkEJEDBYfoAAgYyAwcpUJSgBAgbLDxAgkBEwWJmqBCVAwGD5AQIEMgIGK1OVoAQIGCw/QIBARsBgZaoSlAABg+UHCBDICBisTFWCEiBgsPwAAQIZAYOVqUpQAgQMlh8gQCAjYLAyVQlKgIDB8gMECGQEDFamKkEJEDBYfoAAgYyAwcpUJSgBAgbLDxAgkBEwWJmqBCVAwGD5AQIEMgIGK1OVoAQIGCw/QIBARsBgZaoSlACBB1YxAJfjJb2jAAAAAElFTkSuQmCC"/>
+        <style>
+            #container {
+                width: 480px;
+                height: 320px;
+                display: block;
+                margin: 0 auto;
+                border: 2px solid #d3d3d3;
+                padding: 10px;
+            }
+
+            #container:focus {
+                outline: none;
+            }
+
+            canvas {
+                background-color: black;
+            }
+        </style>
+        <script src="loader.js"></script>
+    </head>
+    <body>
+        <div id="container" tabindex="0"></div>
+        <span>
+            MDN source: <a href="https://developer.mozilla.org/en-US/docs/Games/Tutorials/2D_Breakout_game_pure_JavaScript" target="_blank">HERE</a>
+        </span>
+        <script>
+            let game = new Loader(document.querySelector('#container'));
+
+            game.styles = {
+                '.title': {
+                    'text-align': 'center',
+                    'font-family': 'Arial',
+                    'color': '#0095DD'
+                },
+                '!.option': {
+                    'display': 'block',
+                    'text-align': 'center',
+                    'font-size': '1.5em',
+                    'cursor': 'pointer'
+                },
+                '!.selected': {
+                    'color': '#0095DD'
+                }
+            };
+
+            game.global['games'] = ["Breakout,breakout", "Snake,snake"];
+
+            game.set({
+                gameFolder: function() {
+                    this.addHTML('<h1 class="title">Game Folder</h1>');
+                    this.createSelection(this.global["games"]).publish();
+                },
+                breakoutMenu: function() {
+                    this.addHTML('<h1 class="title">Breakout</h1><span class="option">Play</span>');
+                    this.addEventListener('keydown', function(e) {
+                        if (e.keyCode == 13) {
+                            this.loadscene(2);
+                        } else if (e.keyCode == 8) {
+                            this.loadscene(0);
+                        }
+                    }
+                    .bind(this))
+                },
+                breakout: playBreakout.bind(game),
+                snakeMenu: function() {},
+                snake: playSnake.bind(game),
+                test: function() {
+                    this.addHTML("<h1>Testing</h1>");
+                }
+            });
+
+            function playBreakout() {
+                this.addHTML('<canvas width="480" height="320"></canvas>');
+                let canvas = this.findElement('canvas'), ctx = canvas.getContext('2d'), color = "#0095DD", intervals = 0, mute = false, audioCtx = new AudioContext(), playing = false, sound, ball = new Ball(10,canvas.width / 2,canvas.height - 30), paddle = new Paddle((canvas.width - 75) / 2,canvas.height - 10), score = 0, scoreText = new Text(8,20,"Score: " + score), lives = 3, livesText = new Text(100,20,"Lives: " + lives), high = localStorage.getItem('highScore') || score, highText = new Text(192,20,"High: " + high), key = "", brickfield = new BrickField(75,20,10,5,[color, "lime", "yellow"]), paused = false;
+                startListening.call(this);
+                this.addInterval(draw, 10);
+
+                let back = function(e) {
+                    if (e.key == "Backspace") {
+                        this.removeEventListener('keydown', back);
+                        stopListening();
+                        paused = false;
+                        this.loadscene(1);
+                    }
+                }
+
+                function draw() {
+                    if (!paused) {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        brickfield.update();
+                        paddle.update();
+                        scoreText.text = 'Score: ' + score;
+                        scoreText.update();
+                        livesText.text = 'Lives: ' + lives;
+                        livesText.update();
+                        highText.text = "High: " + high;
+                        highText.update();
+                        brickfield.colliDetect();
+                        if (ball.y + ball.dy < ball.radius) {
+                            ball.dy = -ball.dy;
+                        }
+                        ball.update();
+                        if (ball.y > canvas.height - ball.radius + -ball.dx) {
+                            if (ball.x > paddle.x && ball.x < paddle.x + paddle.width) {
+                                ball.dy = -ball.dy;
+                            } else {
+                                if (lives <= 0) {
+                                    gameOver();
+                                } else {
+                                    reset(false);
+                                }
+                            }
+                        }
+
+                        if (ball.x + ball.dx < ball.radius || ball.x + ball.dx > canvas.width - ball.radius) {
+                            ball.dx = -ball.dx;
+                        }
+
+                        if (key !== "") {
+                            if (key == "right" && paddle.x < canvas.width - paddle.width)
+                                paddle.move("right");
+                            if (key == "left" && paddle.x > 0)
+                                paddle.move("left");
+                        }
+                    }
+                }
+
+                function startListening() {
+                    this.addEventListener('keydown', keyDownHandler.bind(this));
+                    this.addEventListener('keyup', keyUpHandler);
+                    this.addEventListener("mousemove", mouseHandler);
+                }
+
+                function stopListening() {
+                    this.removeEventListener('keydown', keyDownHandler);
+                    this.removeEventListener('keyup', keyUpHandler);
+                    this.removeEventListener('mousemove', mouseHandler);
+                }
+
+                function keyDownHandler(e) {
+                    switch (e.key) {
+                    case "ArrowRight":
+                        key = "right";
+                        break;
+                    case "ArrowLeft":
+                        key = "left";
+                        break;
+                    case "p":
+                    case 'P':
+                        pause.call(this);
+                        break;
+                    case 'm':
+                    case 'M':
+                        mute = mute ? false : true;
+                    }
+                }
+
+                function keyUpHandler(e) {
+                    key = "";
+                }
+
+                function mouseHandler(e) {
+                    let relativeX = e.clientX - canvas.offsetLeft;
+                    if (relativeX > paddle.width / 2 && relativeX < canvas.width - paddle.width / 2) {
+                        paddle.x = relativeX - paddle.width / 2;
+                    }
+                }
+
+                function pause() {
+                    if (paused) {
+                        this.removeEventListener('keydown', back);
+                        paused = false;
+                    } else {
+                        paused = true;
+                        new Text(284,20,"Paused").update();
+                        new Text(351,20,"Return").update();
+                        this.addEventListener('keydown', back.bind(this))
+                    }
+                }
+
+                function gameOver() {
+                    paused = true;
+                    new Text(284,20,"Game Over").update();
+                    new Text(376,20,"Return").update();
+                    let press = function(e) {
+                        if (e.key == "Enter") {
+                            lives = 3;
+                            ball.dx = 2;
+                            ball.dy = -2
+                            score = 0;
+                            this.removeEventListener('keydown', press);
+                            startListening();
+                            reset(true);
+                        } else if (e.key == "Backspace") {
+                            this.removeEventListener('keydown', press);
+                            paused = false;
+                            this.loadscene(1);
+                        }
+                    };
+                    this.addEventListener('keydown', press.bind(this));
+                    stopListening();
+                }
+
+                function reset(full) {
+                    let now = Math.round(performance.now());
+                    while (true) {
+                        if ((Math.round(performance.now()) - now) >= 1000) {
+                            inte = 0;
+                            paddle.x = (canvas.width - 75) / 2;
+                            ball.x = canvas.width / 2;
+                            ball.y = canvas.height - 30;
+                            ball.dx = ball.dx < 0 ? -ball.dx : ball.dx;
+                            ball.dy = ball.dy < 0 ? ball.dy : -ball.dy;
+                            brickfield.bricks.forEach(c=>{
+                                c.forEach(r=>{
+                                    r.life = false;
+                                    r.point = false;
+                                }
+                                );
+                            }
+                            );
+
+                            if (Math.floor(Math.random() * 100) < 1 / 3 * 100) {
+                                brickfield.bricks[Math.floor(Math.random() * brickfield.size)][Math.floor(Math.random() * brickfield.size)].life = true;
+                            }
+                            if (Math.floor(Math.random() * 100) < 1 / 2 * 100) {
+                                brickfield.bricks[Math.floor(Math.random() * brickfield.size)][Math.floor(Math.random() * (brickfield.size - 1))].point = true;
+                            }
+                            if (brickfield.bricks.some((c)=>{
+                                return c.some((r)=>{
+                                    return r.life && r.point;
+                                }
+                                );
+                            }
+                            )) {
+                                console.log("LIFE")
+                            }
+
+                            if (!full) {
+                                lives--;
+                            }
+
+                            if (full) {
+                                if (brickfield.every(function(b) {
+                                    return !b.status
+                                }) && (ball.dx < 3 || ball.dx > -3) && (ball.dy < 3 || ball.dy > -3)) {
+                                    ball.dx = ball.dx < 0 ? ball.dx > -3 ? ball.dx - 0.1 : ball.dx : ball.dx < 3 ? ball.dx + 0.1 : ball.dx;
+                                    ball.dy = ball.dy < 0 ? ball.dy > -3 ? ball.dy - 0.1 : ball.dy : ball.dy < 3 ? ball.dy + 0.1 : ball.dy;
+                                }
+                                for (var c = 0; c < brickfield.size; c++) {
+                                    for (var r = 0; r < brickfield.size; r++) {
+                                        brickfield.bricks[c][r].status = 1;
+                                    }
+                                }
+                                paused = false;
+                            }
+                            break
+                        }
+                    }
+                }
+
+                function playSound(freq, length) {
+                    if (!mute) {
+                        if (!audioCtx)
+                            audioCtx = new AudioContext();
+                        if (playing) {
+                            sound.stop(0);
+                            playing = false;
+                        }
+                        sound = audioCtx.createOscillator();
+                        sound.frequency.value = freq;
+                        sound.type = 'triangle';
+
+                        let gain = audioCtx.createGain();
+                        gain.gain.value = 0.25;
+                        gain.connect(audioCtx.destination);
+
+                        sound.connect(gain);
+                        if (audioCtx.state == 'suspended')
+                            audioCtx.resume();
+                        sound.start(audioCtx.currentTime);
+                        playing = true;
+                        sound.stop(audioCtx.currentTime + length * 0.2);
+                        sound.onended = function() {
+                            playing = false;
+                        }
+                    }
+                }
+
+                function Text(x, y, str, style) {
+                    this.text = str;
+                    this.style = style || {
+                        size: '16px',
+                        family: "Arial",
+                        color: color
+                    };
+                    this.style.size = this.style.size || '16px';
+                    this.style.family = this.style.family || 'Arial';
+                    this.style.color = this.style.color || color;
+                    this.x = x;
+                    this.y = y;
+                }
+
+                Text.prototype.update = function() {
+                    ctx.font = `${this.style.size} ${this.style.family}`;
+                    ctx.fillStyle = this.style.color;
+                    ctx.fillText(this.text, this.x, this.y);
+                }
+
+                function Paddle(x, y) {
+                    this.width = 75;
+                    this.height = 10;
+                    this.x = x;
+                    this.y = y;
+                }
+                Paddle.prototype.update = function() {
+                    ctx.beginPath();
+                    ctx.rect(this.x, this.y, this.width, this.height);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    ctx.closePath();
+                }
+                Paddle.prototype.move = function(dir) {
+                    switch (dir) {
+                    case "right":
+                        paddle.x += 7;
+                        break;
+                    case "left":
+                        paddle.x -= 7;
+                        break;
+                    }
+                }
+
+                function Ball(radius, x, y) {
+                    this.radius = radius;
+                    this.x = x;
+                    this.y = y;
+                    this.dx = 2;
+                    this.dy = -2;
+                }
+                Ball.prototype.update = function() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    ctx.closePath();
+                    this.x += this.dx;
+                    this.y += this.dy;
+                }
+
+                function BrickField(width, height, padding, size, colors) {
+                    this.brickWidth = width;
+                    this.brickHeight = height;
+                    this.size = size;
+                    this.brickPadding = padding;
+                    this.brickOffsetTop = (canvas.height - ((this.brickHeight + this.brickPadding) * this.size - this.brickPadding)) / 6
+                    //30;
+                    this.brickOffsetLeft = (canvas.width - ((this.brickWidth + this.brickPadding) * this.size - this.brickPadding)) / 2;
+                    this.colors = colors;
+                    this.bricks = [];
+                    for (c = 0; c < this.size; c++) {
+                        this.bricks[c] = [];
+                        for (r = 0; r < this.size; r++) {
+                            this.bricks[c][r] = {
+                                x: 0,
+                                y: 0,
+                                status: true,
+                                life: false,
+                                point: false
+                            };
+                        }
+                    }
+                }
+                ;BrickField.prototype.update = function() {
+                    for (var c = 0; c < this.size; c++) {
+                        for (var r = 0; r < this.size; r++) {
+                            if (this.bricks[c][r].status) {
+                                let b = this.bricks[c][r];
+                                b.x = (c * (this.brickWidth + this.brickPadding)) + this.brickOffsetLeft;
+                                b.y = (r * (this.brickHeight + this.brickPadding)) + this.brickOffsetTop;
+                                ctx.beginPath();
+                                ctx.rect(b.x, b.y, this.brickWidth, this.brickHeight);
+                                ctx.fillStyle = this.bricks[c][r].life ? this.colors[1] : this.bricks[c][r].point ? this.colors[2] : this.colors[0];
+                                ctx.fill();
+                                ctx.closePath();
+                            }
+                        }
+                    }
+                }
+                ;
+                BrickField.prototype.every = function(callback) {
+                    for (c = 0; c < this.size; c++) {
+                        if (!(this.bricks[c].every(callback))) {
+                            return false;
+                            break;
+                        }
+                    }
+                    return true;
+                }
+                BrickField.prototype.colliDetect = function() {
+                    for (var c = 0; c < this.size; c++) {
+                        for (var r = 0, b; r < this.size; r++) {
+                            b = this.bricks[c][r];
+                            if (b.status) {
+                                if (ball.x > b.x && ball.x < b.x + this.brickWidth && ball.y > b.y && ball.y < b.y + this.brickHeight) {
+                                    ball.dy = -ball.dy;
+                                    b.status = false;
+                                    if (this.every(function(v) {
+                                        return !v.status;
+                                    })) {
+                                        reset(true);
+                                    }
+                                    if (b.life) {
+                                        lives++;
+                                        playSound(800, 3);
+                                    }
+                                    if (b.point) {
+                                        playSound(700, 2);
+                                        score += Math.ceil(score * 0.1);
+                                    }
+                                    if (!b.life && !b.point) {
+                                        score++;
+                                        playSound(630, 2);
+                                    }
+                                    ;if (score > high) {
+                                        high = score;
+                                        localStorage.setItem('highScore', high)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            function playSnake() {
+                this.addHTML('<canvas width="400" height="400" id="game"></canvas>');
+
+                xv = yv = 0;
+                px = py = 10;
+                ax = ay = 15;
+                gs = tc = 20;
+                trail = [];
+                tail = 5;
+
+                function game() {
+                    px += xv;
+                    py += yv;
+                    if (px < 0) {
+                        px = tc - 1;
+                    }
+                    if (px > tc - 1) {
+                        px = 0;
+                    }
+                    if (py < 0) {
+                        py = tc - 1;
+                    }
+                    if (py > tc - 1) {
+                        py = 0;
+                    }
+
+                    //ctx.clearRect(0,0,canvas.width,canvas.height)
+                    ctx.fillStyle = "black";
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.fillStyle = "lime";
+                    for (var i = 0; i < trail.length; i++) {
+                        ctx.fillRect(trail[i].x * gs, trail[i].y * gs, gs - 2, gs - 2)
+                        if (trail[i].x == px && trail[i].y == py) {
+                            tail = 5;
+                        }
+                    }
+
+                    trail.push({
+                        x: px,
+                        y: py
+                    });
+
+                    while (trail.length > tail) {
+                        trail.shift();
+                    }
+
+                    if (ax == px && ay == py) {
+                        tail++;
+                        ax = Math.floor(Math.random() * tc);
+                        ay = Math.floor(Math.random() * tc);
+                    }
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(ax * gs, ay * gs, gs - 2, gs - 2)
+                }
+
+                function keyPush(e) {
+                    switch (e.keyCode) {
+                    case 37:
+                        xv = -1;
+                        yv = 0;
+                        break;
+                    case 38:
+                        xv = 0;
+                        yv = -1;
+                        break;
+                    case 39:
+                        xv = 1;
+                        yv = 0;
+                        break;
+                    case 40:
+                        xv = 0;
+                        yv = 1;
+                        break;
+                    }
+                }
+
+                canvas = document.getElementById("game");
+                ctx = canvas.getContext('2d')
+                document.addEventListener('keydown', keyPush);
+                window.setInterval(game, 1000 / 15);
+            }
+
+            game.init(function() {
+                this.loadscene("gameFolder")
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Music</title>
+        <style>
+            #container {
+                width: 480px;
+                height: 320px;
+                display: block;
+                margin: 0 auto
+            }
+
+            #container:focus {
+                outline: none;
+            }
+        </style>
+        <script type="text/javascript" src="piano.json"></script>
+        <script type="text/javascript" src="songs.json"></script>
+        <script src="loader.js"></script>
+    </head>
+    <body>
+        <div id="container" tabindex="0"></div>
+        <script>
+            let music = new Loader(document.querySelector("#container"));
+
+            music.set({
+                menu: function() {
+                    this.addHTML('<h1>Music Folder</h1>');
+
+                    this.createSelection(["Songs,songsMenu"]).publish();
+                },
+                songsMenu: function() {
+                    this.addHTML('<h1>Songs</h1>');
+
+                    this.createSelection(this.global.songs.map(song=>{
+                        var ret = song.name + ",song[" + JSON.stringify(song) + "]" || "";
+                        return ret;
+                    }
+                    )).publish();
+                },
+                piano: function() {},
+                song: function(play) {
+                    this.addHTML('<h1>Song Panel</h1><div class="song-container"><div class="button">></div><div class="progress-bar"><div class="bar"></div></div><div class="button loop">loop</div></div>');
+
+                    playSong(JSON.parse(play)[0]);
+                }
+            });
+
+            function convertToOld(song) {
+                var out = {};
+                var streampush = "";
+                var notes = "A,B,C,D,E,F,G".split(',');
+                var decoded = new Uint8Array(decodeBase64ToArrayBuffer(song));
+                console.log(decoded)
+                out['speed'] = 120;
+                out['stream'] = [];
+                streampush += 4 / decoded[5] + '|' + notes[((Math.ceil(decoded[6] / 12) * 12) - decoded[6])] + Math.ceil(decoded[6] / 12);
+                out['stream'].push(streampush);
+                return out;
+            }
+
+            function decodeBase64ToArrayBuffer(base64String) {
+                var len = (base64String.length / 4) * 3;
+                var str = atob(base64String);
+                var arrayBuffer = new ArrayBuffer(len);
+                var bytes = new Uint8Array(arrayBuffer);
+
+                for (var i = 0; i < len; i++) {
+                    bytes[i] = str.charCodeAt(i);
+                }
+                return bytes.buffer;
+            }
+
+            function playSong(song) {
+                let dat = [];
+                let count = [];
+                let progress = music.findElement('.bar')
+                let songlength = 0;
+                //console.log(song);
+                song["stream"].forEach(function(clef) {
+                    dat.push(clef.split(','));
+                    count.push(0);
+                    if (clef.split(',').length > songlength)
+                        songlength = clef.split(',').length;
+                });
+
+                var audioCtx = new AudioContext();
+
+                var pitchOffsets = {
+                    'A': 0,
+                    'A#': 1,
+                    'BB': 1,
+                    'B': 2,
+                    'CB': 2,
+                    'B#': 3,
+                    'C': 3,
+                    'C#': 4,
+                    'DB': 4,
+                    'D': 5,
+                    'D#': 6,
+                    'EB': 6,
+                    'E': 7,
+                    'FB': 7,
+                    'E#': 8,
+                    'F': 8,
+                    'F#': 9,
+                    'GB': 9,
+                    'G': 10,
+                    'G#': 11,
+                    'AB': 11
+                }
+
+                var keyNumFromName = function(keyName) {
+                    // match a pitch name and octave, capture them separately
+                    // Breakdown of this regex here: https://regexper.com/#%2F(%5BA-Ga-g%5D%2B%23%7B0%2C1%7D)(%5Cd)%2F
+
+                    if (keyName.split('|')[1] == '/')
+                        return [-100];
+                    var pitchMatchRegEx = /([A-Ga-g]+#{0,1})(\d)/;
+                    keyName = keyName.split('|')[1].split('*');
+                    var pitchNameParts = keyName.map(function(note) {
+                        return note.match(pitchMatchRegEx);
+                    });
+                    /*if (!pitchNameParts) {
+					throw new Error('Incorrect pitch notation. Pitchname must consist of a pitch name (A-G with optional # or b) and ')
+				}*/
+                    var keyNumber = pitchNameParts.map(function(name) {
+                        return (parseInt(name[2]) * 12) + pitchOffsets[name[1].toUpperCase()] + 1;
+                    });
+                    return keyNumber;
+                }
+
+                var frequencyFromKeyNum = function(keyNum) {
+                    return keyNum.map(function(note) {
+                        return Math.pow(Math.pow(2, (1 / 12)), note - 49) * 440;
+                    });
+                }
+
+                // master scale speed value (in seconds per note)
+                var scaleSpeed = 1 / (song.speed / 60);
+
+                // grab play buttons
+                var playButton = music.findElement('.button');
+
+                playButton.addEventListener('click', eplay);
+
+                let freq;
+                let playing = false;
+                let paused = false;
+                let loopButton = music.findElement('.loop');
+                let loop = false;
+                loopButton.addEventListener("click", function(e) {
+                    if (!loop) {
+                        loopButton.style.backgroundColor = "lime";
+                        loop = true;
+                    } else {
+                        loopButton.style.backgroundColor = "initial";
+                        loop = false;
+                    }
+                })
+                let mockE = new Event("click",{
+                    cancelable: true
+                });
+
+                var gainNode = audioCtx.createGain();
+                gainNode.connect(audioCtx.destination);
+                gainNode.gain.value = 0.05;
+
+                // event handler for play scale buttons
+                function eplay(e) {
+                    if (!playing && !paused) {
+                        playing = true;
+                        playButton.innerHTML = "||"
+                        for (var k = 0; k < dat.length; k++) {
+                            play(k);
+                        }
+                    }
+                    else if(playing && !paused) {
+                        paused = true;
+                        playing = false;
+                        playButton.innerHTML = ">";
+                        audioCtx.suspend();
+                    }
+                    else if(paused) {
+                        playing = true;
+                        paused = false;
+                        playButton.innerHTML = "||";
+                        audioCtx.resume();
+                    }
+                }
+
+                function play(streamx) {
+                    if (count[streamx] < dat[streamx].length && playing) {
+                        if (streamx == 0) {
+                            progress.style.width = (count[streamx] + 1) * (1 / songlength) * 100 + "%";
+                        }
+                        freq = frequencyFromKeyNum(keyNumFromName(dat[streamx][count[streamx]]));
+                        playTone(freq, audioCtx.currentTime, dat[streamx][count[streamx]].split('|')[0]).onended = function() {
+                            count[streamx]++;
+                            play(streamx);
+                        }
+                        ;
+                    } else if (count[streamx] == songlength) {
+                        playing = false;
+                        playButton.innerHTML = ">";
+                        count.forEach(function(x, it) {
+                            count[it] = 0;
+                        });
+                        if (loop) {
+                            eplay(mockE);
+                        }
+                    }
+                }
+
+                function playTone(freq, time, length) {
+                    var osc;
+                    for (let i = 0; i < freq.length; i++) {
+                        osc = audioCtx.createOscillator();
+                        osc.type = 'sawtooth';
+                        osc.connect(gainNode);
+                        osc.frequency.value = freq[i];
+                        osc.start(time);
+                        osc.stop(time + scaleSpeed * length);
+                    }
+                    return osc;
+                }
+            }
+
+            music.styles = {
+                '*': {
+                    'font-family': 'Arial'
+                },
+                'h1': {
+                    'text-align': 'center'
+                },
+                '.option': {
+                    'display': 'block',
+                    'text-align': 'center',
+                    'font-size': '1.5em'
+                },
+                '.chosen': {
+                    'color': '#0095DD'
+                },
+                '.song-container': {
+                    'display': 'block',
+                    'margin': '0 auto',
+                    border: '2px solid #d3d3d3',
+                    padding: '20px',
+                    'text-align': 'center'
+                },
+                '.progress-bar': {
+                    width: '90%',
+                    height: '10px',
+                    'background-color': 'grey',
+                    display: 'inline-block',
+                    'font-size': '0.5em'
+                },
+                '.bar': {
+                    'width': '0%',
+                    'height': '10px',
+                    'background-color': 'green'
+                },
+                '.button': {
+                    'width': '5%',
+                    'height': '10px',
+                    'border': '1px solid #ddd',
+                    'display': 'inline-block',
+                    'cursor': 'pointer',
+                    'font-size': '0.7em',
+                }
+            };
+
+            music.init(function() {
+                this.global['songs'] = data;
+                this.global['audioctx'] = null;
+                this.loadscene('menu');
+            });
+        </script>
+    </body>
+</html>
