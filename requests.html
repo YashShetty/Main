@@ -3,8 +3,9 @@
 <head></head>
 <body>
   <script>
-    console.log(this);
-    this.postMessage("Testing...", "*");
+    var tis = window.parent;
+    console.log(window != tis);
+    tis.postMessage("Testing...", "*");
   </script>
 </body>
 </html>
